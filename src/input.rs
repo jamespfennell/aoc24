@@ -1,28 +1,28 @@
 use std::fs;
 
-pub struct File<const N: usize> {
-    rows: Vec<[i32; N]>,
+pub struct File {
+    rows: Vec<Vec<i32>>,
 }
 
-impl<const N: usize> File<N> {
+impl File {
+    pub fn rows(&self) -> &[Vec<i32>] {
+        &self.rows
+    }
     pub fn column<const M: usize>(&self) -> Vec<i32> {
         self.rows.iter().map(|row| row[M]).collect()
     }
 }
 
-pub fn read_file<const N: usize>(path: &str) -> File<N> {
+pub fn read_file(path: &str) -> File {
     let contents = fs::read_to_string(path).expect("could not open file");
-    let mut rows: Vec<[i32; N]> = vec![];
+    let mut rows: Vec<Vec<i32>> = vec![];
     for line in contents.lines() {
-        let mut row = [0; N];
-        for (i, word) in line.split_ascii_whitespace().enumerate() {
-            let cell = match row.get_mut(i) {
-                Some(cell) => cell,
-                None => break,
-            };
-            *cell = word
+        let mut row = vec![];
+        for word in line.split_ascii_whitespace() {
+            let cell = word
                 .parse::<i32>()
                 .expect("all words in the file are integers");
+            row.push(cell);
         }
         rows.push(row);
     }

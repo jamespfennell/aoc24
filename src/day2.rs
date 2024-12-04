@@ -3,21 +3,23 @@ use std::collections::HashMap;
 use super::input;
 
 pub fn problem_1() -> i32 {
-    let data: input::File<5> = input::read_file("data/day2.txt");
-    let mut left_column = data.column::<0>();
-    left_column.sort();
-    let mut right_column: Vec<i32> = data.column::<1>();
-    right_column.sort();
+    let data: input::File = input::read_file("data/day2.txt");
 
-    let mut total = 0_i32;
-    for i in 0..right_column.len() {
-        total += (left_column[i] - right_column[i]).abs();
-    }
-    total
+    data.rows()
+        .into_iter()
+        .filter(|row| {
+            (0..row.len() - 1).all(|i| {
+                let diff = (row[i] - row[i + 1]).abs();
+                diff >= 1 && diff <= 3 && row[i].cmp(&row[i + 1]) == row[0].cmp(&row[1])
+            })
+        })
+        .count()
+        .try_into()
+        .unwrap()
 }
 
 pub fn problem_2() -> i32 {
-    let data: input::File<2> = input::read_file("data/day1.txt");
+    let data: input::File = input::read_file("data/day1.txt");
     let mut left_column = data.column::<0>();
     left_column.sort();
     let mut right_column: Vec<i32> = data.column::<1>();
@@ -40,7 +42,7 @@ mod test {
     use super::*;
     #[test]
     fn test_problem_1() {
-        assert_eq!(2000468_i32, problem_1());
+        assert_eq!(341_i32, problem_1());
     }
     #[test]
     fn test_problem_2() {
