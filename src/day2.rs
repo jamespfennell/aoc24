@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use super::input;
 
 pub fn problem_1() -> i32 {
@@ -19,22 +17,53 @@ pub fn problem_1() -> i32 {
 }
 
 pub fn problem_2() -> i32 {
-    let data: input::File = input::read_file("data/day1.txt");
-    let mut left_column = data.column::<0>();
-    left_column.sort();
-    let mut right_column: Vec<i32> = data.column::<1>();
-    right_column.sort();
+    let data: input::File = input::read_file("data/day2.txt");
 
-    let mut hist: HashMap<i32, i32> = Default::default();
-    for r in &right_column {
-        *hist.entry(*r).or_insert(0) += 1;
-    }
+    data.rows()
+        .into_iter()
+        .filter(|row| {
+            (0..row.len() + 1).any(|element_to_skip| {
+                // If element_to_skip == row.len() then no element is skipped.
+                // This ensures we still accept a row that is valid with no skipped elements.
+                let row: Vec<i32> = Skipper::new(row, element_to_skip).collect();
+                (0..row.len() - 1).all(|i| {
+                    let diff = (row[i] - row[i + 1]).abs();
+                    diff >= 1 && diff <= 3 && row[i].cmp(&row[i + 1]) == row[0].cmp(&row[1])
+                })
+            })
+        })
+        .count()
+        .try_into()
+        .unwrap()
+}
 
-    let mut similarity = 0_i32;
-    for l in &left_column {
-        similarity += *l * hist.get(l).copied().unwrap_or(0);
+struct Skipper<'a> {
+    row: &'a [i32],
+    skip: usize,
+    current: usize,
+}
+
+impl<'a> Skipper<'a> {
+    fn new(row: &'a [i32], skip: usize) -> Self {
+        Self {
+            row,
+            skip,
+            current: 0,
+        }
     }
-    similarity
+}
+
+impl<'a> Iterator for Skipper<'a> {
+    type Item = i32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current == self.skip {
+            self.current += 1;
+        }
+        let elem = self.row.get(self.current).copied();
+        self.current += 1;
+        elem
+    }
 }
 
 #[cfg(test)]
