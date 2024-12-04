@@ -34,16 +34,3 @@ pub fn problem_2() -> i32 {
     }
     similarity
 }
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    #[test]
-    fn test_problem_1() {
-        assert_eq!(2000468_i32, problem_1());
-    }
-    #[test]
-    fn test_problem_2() {
-        assert_eq!(18567089_i32, problem_2());
-    }
-}

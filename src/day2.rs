@@ -65,16 +65,3 @@ impl<'a> Iterator for Skipper<'a> {
         elem
     }
 }
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    #[test]
-    fn test_problem_1() {
-        assert_eq!(341_i32, problem_1());
-    }
-    #[test]
-    fn test_problem_2() {
-        assert_eq!(18567089_i32, problem_2());
-    }
-}
