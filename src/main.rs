@@ -1,6 +1,7 @@
 mod day1;
 mod day2;
 mod day3;
+mod day4;
 mod input;
 
 fn main() {
@@ -15,6 +16,8 @@ fn main() {
         ("2", "2") => day2::problem_2,
         ("3", "1") => day3::problem_1,
         ("3", "2") => day3::problem_2,
+        ("4", "1") => day4::problem_1,
+        ("4", "2") => day4::problem_2,
         _ => {
             panic!("Unknown day {} and problem {}", args[1], args[2]);
         }
@@ -45,5 +48,6 @@ mod test {
         (day1, 2000468, 18567089),
         (day2, 341, 404),
         (day3, 182780583, 90772405),
+        (day4, 2462, 0),
     );
 }
