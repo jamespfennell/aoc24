@@ -9,45 +9,63 @@ fn main() {
     if args.len() < 3 {
         panic!("Must provide 2 command line arguments: the day number and problem number");
     }
-    let f = match (args[1].as_str(), args[2].as_str()) {
-        ("1", "1") => day1::problem_1,
-        ("1", "2") => day1::problem_2,
-        ("2", "1") => day2::problem_1,
-        ("2", "2") => day2::problem_2,
-        ("3", "1") => day3::problem_1,
-        ("3", "2") => day3::problem_2,
-        ("4", "1") => day4::problem_1,
-        ("4", "2") => day4::problem_2,
-        _ => {
-            panic!("Unknown day {} and problem {}", args[1], args[2]);
-        }
-    };
-    println!("{:?}", f());
+    print_problem_answer(args[1].as_str(), args[2].as_str());
 }
 
-#[cfg(test)]
-mod test {
-    macro_rules! test_answers {
-        ( $( ($package: ident, $answer1: expr, $answer2: expr), )+ ) => {
+macro_rules! days {
+    ( $( ($package: ident, $answer1: expr, $answer2: expr), )+ ) => {
+        fn print_problem_answer(day: &str, problem: &str) {
+            let day = format!["day{day}"];
+            let f = match (day.as_str(), problem) {
+                $(
+                    (stringify![$package], "1") => $package::problem_1,
+                    (stringify![$package], "2") => $package::problem_2,
+                )+
+                _ => {
+                    panic!("Unknown day {day} and problem {problem}");
+                }
+            };
+            let data = load_data(&day);
+            let answer = f(&data);
+            println!["{answer}"];
+        }
+        #[cfg(test)]
+        mod test {
             $(
                 mod $package {
                     #[test]
                     fn test_problem_1() {
-                        assert_eq!($answer1, super::super::$package::problem_1());
+                        super::super::run_test($answer1.into(), super::super::$package::problem_1, stringify![$package]);
                     }
                     #[test]
                     fn test_problem_2() {
-                        assert_eq!($answer2, super::super::$package::problem_2());
+                        super::super::run_test($answer1.into(), super::super::$package::problem_1, stringify![$package]);
                     }
                 }
             )+
-        };
+        }
     }
+}
 
-    test_answers!(
-        (day1, 2000468, 18567089),
-        (day2, 341, 404),
-        (day3, 182780583, 90772405),
-        (day4, 2462, 1877),
-    );
+days!(
+    (day1, 2000468, 18567089),
+    (day2, 341, 404),
+    (day3, 182780583, 90772405),
+    (day4, 2462, 1877),
+);
+
+fn load_data(file_name: &str) -> String {
+    let path = format!["data/{}.txt", file_name];
+    std::fs::read_to_string(path).expect("expect file to exist")
+}
+
+#[cfg(test)]
+fn run_test(want: Option<i32>, problem_func: fn(&str) -> i32, package_name: &str) {
+    let want = match want {
+        None => return,
+        Some(want) => want,
+    };
+    let data = load_data(package_name);
+    let got = problem_func(&data);
+    assert_eq!(got, want);
 }

@@ -1,15 +1,12 @@
-use std::fs;
-
-pub fn problem_1() -> i32 {
-    problem(false)
+pub fn problem_1(data: &str) -> i32 {
+    problem(data, false)
 }
 
-pub fn problem_2() -> i32 {
-    problem(true)
+pub fn problem_2(data: &str) -> i32 {
+    problem(data, true)
 }
 
-pub fn problem(do_and_dont: bool) -> i32 {
-    let data = fs::read_to_string("data/day3.txt").expect("expected file to exist");
+pub fn problem(data: &str, do_and_dont: bool) -> i32 {
     let mut state: State = Default::default();
     let mut sum = 0;
     let mut enabled = true;

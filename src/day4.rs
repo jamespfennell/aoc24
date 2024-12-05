@@ -1,10 +1,9 @@
-use std::{collections::HashSet, fs};
+use std::collections::HashSet;
 
 const XMAS: [char; 4] = ['X', 'M', 'A', 'S'];
 const SAMX: [char; 4] = ['S', 'A', 'M', 'X'];
 
-pub fn problem_1() -> i32 {
-    let data = fs::read_to_string("data/day4.txt").expect("expected file to exist");
+pub fn problem_1(data: &str) -> i32 {
     let lines: Vec<Vec<char>> = data
         .lines()
         .map(|l| {
@@ -85,12 +84,7 @@ impl Mode {
     }
 }
 
-pub fn problem_2() -> i32 {
-    let data = fs::read_to_string("data/day4.txt").expect("expected file to exist");
-    problem_2_with_input(&data)
-}
-
-pub fn problem_2_with_input(data: &str) -> i32 {
+pub fn problem_2(data: &str) -> i32 {
     let lines: Vec<Vec<char>> = data
         .lines()
         .map(|l| {
@@ -141,7 +135,7 @@ S.S.S.S.S.
 .A.A.A.A..
 M.M.M.M.M.
 ..........";
-        assert_eq!(9, problem_2_with_input(&data))
+        assert_eq!(9, problem_2(&data))
     }
 
     #[test]

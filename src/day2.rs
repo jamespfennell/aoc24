@@ -1,7 +1,7 @@
 use super::input;
 
-pub fn problem_1() -> i32 {
-    let data: input::File = input::read_file("data/day2.txt");
+pub fn problem_1(data: &str) -> i32 {
+    let data: input::File = input::read_file(data);
 
     data.rows()
         .into_iter()
@@ -16,8 +16,8 @@ pub fn problem_1() -> i32 {
         .unwrap()
 }
 
-pub fn problem_2() -> i32 {
-    let data: input::File = input::read_file("data/day2.txt");
+pub fn problem_2(data: &str) -> i32 {
+    let data: input::File = input::read_file(data);
 
     data.rows()
         .into_iter()

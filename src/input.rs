@@ -1,5 +1,3 @@
-use std::fs;
-
 pub struct File {
     rows: Vec<Vec<i32>>,
 }
@@ -13,10 +11,9 @@ impl File {
     }
 }
 
-pub fn read_file(path: &str) -> File {
-    let contents = fs::read_to_string(path).expect("could not open file");
+pub fn read_file(data: &str) -> File {
     let mut rows: Vec<Vec<i32>> = vec![];
-    for line in contents.lines() {
+    for line in data.lines() {
         let mut row = vec![];
         for word in line.split_ascii_whitespace() {
             let cell = word

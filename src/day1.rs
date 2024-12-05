@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use super::input;
 
-pub fn problem_1() -> i32 {
-    let data: input::File = input::read_file("data/day1.txt");
+pub fn problem_1(data: &str) -> i32 {
+    let data: input::File = input::read_file(data);
     let mut left_column = data.column::<0>();
     left_column.sort();
     let mut right_column: Vec<i32> = data.column::<1>();
@@ -16,8 +16,8 @@ pub fn problem_1() -> i32 {
     total
 }
 
-pub fn problem_2() -> i32 {
-    let data: input::File = input::read_file("data/day1.txt");
+pub fn problem_2(data: &str) -> i32 {
+    let data: input::File = input::read_file(data);
     let mut left_column = data.column::<0>();
     left_column.sort();
     let mut right_column: Vec<i32> = data.column::<1>();
