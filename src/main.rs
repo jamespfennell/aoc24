@@ -53,7 +53,7 @@ days!(
     (day2, 341, 404),
     (day3, 182780583, 90772405),
     (day4, 2462, 1877),
-    (day5, 4637, None),
+    (day5, 4637, 6370),
 );
 
 fn load_data(file_name: &str) -> String {
