@@ -3,6 +3,7 @@ mod day2;
 mod day3;
 mod day4;
 mod day5;
+mod day6;
 mod input;
 
 fn main() {
@@ -54,6 +55,7 @@ days!(
     (day3, 182780583, 90772405),
     (day4, 2462, 1877),
     (day5, 4637, 6370),
+    (day6, 5145, None),
 );
 
 fn load_data(file_name: &str) -> String {
