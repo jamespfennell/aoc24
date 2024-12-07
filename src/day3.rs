@@ -1,12 +1,12 @@
-pub fn problem_1(data: &str) -> i32 {
+pub fn problem_1(data: &str) -> i64 {
     problem(data, false)
 }
 
-pub fn problem_2(data: &str) -> i32 {
+pub fn problem_2(data: &str) -> i64 {
     problem(data, true)
 }
 
-pub fn problem(data: &str, do_and_dont: bool) -> i32 {
+pub fn problem(data: &str, do_and_dont: bool) -> i64 {
     let mut state: State = Default::default();
     let mut sum = 0;
     let mut enabled = true;
@@ -38,16 +38,16 @@ pub fn problem(data: &str, do_and_dont: bool) -> i32 {
                 Default::default()
             }
             (FirstArg(current), '0'..='9') => {
-                let r: i32 = (next as usize - '0' as usize)
+                let r: i64 = (next as usize - '0' as usize)
                     .try_into()
-                    .expect("digit fits in i32");
+                    .expect("digit fits in i64");
                 FirstArg(current * 10 + r)
             }
             (FirstArg(current), ',') => SecondArg(current, 0),
             (SecondArg(first, current), '0'..='9') => {
-                let r: i32 = (next as usize - '0' as usize)
+                let r: i64 = (next as usize - '0' as usize)
                     .try_into()
-                    .expect("digit fits in i32");
+                    .expect("digit fits in i64");
                 SecondArg(first, current * 10 + r)
             }
             (SecondArg(first, second), ')') => {
@@ -65,8 +65,8 @@ pub fn problem(data: &str, do_and_dont: bool) -> i32 {
 enum State {
     FunctionName(String),
     NoArg(&'static str),
-    FirstArg(i32),
-    SecondArg(i32, i32),
+    FirstArg(i64),
+    SecondArg(i64, i64),
 }
 
 impl Default for State {

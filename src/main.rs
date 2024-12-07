@@ -4,6 +4,7 @@ mod day3;
 mod day4;
 mod day5;
 mod day6;
+mod day7;
 mod input;
 
 fn main() {
@@ -55,7 +56,8 @@ days!(
     (day3, 182780583, 90772405),
     (day4, 2462, 1877),
     (day5, 4637, 6370),
-    (day6, 5145, None),
+    (day6, 5145, 1523),
+    (day7, 2299996598890, None),
 );
 
 fn load_data(file_name: &str) -> String {
@@ -64,7 +66,7 @@ fn load_data(file_name: &str) -> String {
 }
 
 #[cfg(test)]
-fn run_test(want: Option<i32>, problem_func: fn(&str) -> i32, package_name: &str) {
+fn run_test(want: Option<i64>, problem_func: fn(&str) -> i64, package_name: &str) {
     let want = match want {
         None => return,
         Some(want) => want,

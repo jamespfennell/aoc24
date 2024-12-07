@@ -3,7 +3,7 @@ use std::collections::HashSet;
 const XMAS: [char; 4] = ['X', 'M', 'A', 'S'];
 const SAMX: [char; 4] = ['S', 'A', 'M', 'X'];
 
-pub fn problem_1(data: &str) -> i32 {
+pub fn problem_1(data: &str) -> i64 {
     let lines: Vec<Vec<char>> = data
         .lines()
         .map(|l| {
@@ -84,7 +84,7 @@ impl Mode {
     }
 }
 
-pub fn problem_2(data: &str) -> i32 {
+pub fn problem_2(data: &str) -> i64 {
     let lines: Vec<Vec<char>> = data
         .lines()
         .map(|l| {

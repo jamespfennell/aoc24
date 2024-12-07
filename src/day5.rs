@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-pub fn problem_1(data: &str) -> i32 {
+pub fn problem_1(data: &str) -> i64 {
     let data = Data::build(data);
     data.updates
         .iter()
@@ -9,7 +9,7 @@ pub fn problem_1(data: &str) -> i32 {
         .sum()
 }
 
-pub fn problem_2(data: &str) -> i32 {
+pub fn problem_2(data: &str) -> i64 {
     let mut data = Data::build(data);
     data.updates
         .iter_mut()
@@ -23,13 +23,13 @@ pub fn problem_2(data: &str) -> i32 {
 
 #[derive(Debug)]
 struct Data {
-    rules: HashMap<i32, Vec<i32>>,
+    rules: HashMap<i64, Vec<i64>>,
     updates: Vec<Update>,
 }
 
 impl Data {
     fn build(raw_data: &str) -> Self {
-        let mut rules: HashMap<i32, Vec<i32>> = Default::default();
+        let mut rules: HashMap<i64, Vec<i64>> = Default::default();
         let mut updates: Vec<Update> = Default::default();
         let mut parsing_rules = true;
         for line in raw_data.lines() {
@@ -38,14 +38,14 @@ impl Data {
                 continue;
             }
             if parsing_rules {
-                let raw: [i32; 2] = line
+                let raw: [i64; 2] = line
                     .split("|")
                     .into_iter()
                     .map(|f| {
-                        f.parse::<i32>()
+                        f.parse::<i64>()
                             .expect("expect to be able to parse rule part as integer")
                     })
-                    .collect::<Vec<i32>>()
+                    .collect::<Vec<i64>>()
                     .try_into()
                     .expect("expected rule to have two parts");
                 rules.entry(raw[0]).or_default().push(raw[1]);
@@ -53,7 +53,7 @@ impl Data {
                 updates.push(Update(
                     line.split_terminator(',')
                         .map(|f| {
-                            f.parse::<i32>()
+                            f.parse::<i64>()
                                 .expect("expect to be able to parse rule part as integer")
                         })
                         .collect(),
@@ -65,10 +65,10 @@ impl Data {
 }
 
 #[derive(Debug)]
-struct Update(Vec<i32>);
+struct Update(Vec<i64>);
 
 impl Update {
-    fn is_correct(&self, rules: &HashMap<i32, Vec<i32>>) -> bool {
+    fn is_correct(&self, rules: &HashMap<i64, Vec<i64>>) -> bool {
         for i in 0..self.0.len() {
             for j in (i + 1)..self.0.len() {
                 if let Some(rule) = rules.get(&self.0[j]) {
@@ -80,10 +80,10 @@ impl Update {
         }
         true
     }
-    fn median(&self) -> i32 {
+    fn median(&self) -> i64 {
         self.0[(self.0.len() - 1) / 2]
     }
-    fn sort(&mut self, rules: &HashMap<i32, Vec<i32>>) {
+    fn sort(&mut self, rules: &HashMap<i64, Vec<i64>>) {
         let mut v: Vec<UpdateElem> = self
             .0
             .iter()
@@ -96,8 +96,8 @@ impl Update {
 }
 
 struct UpdateElem<'a> {
-    value: i32,
-    rules: &'a HashMap<i32, Vec<i32>>,
+    value: i64,
+    rules: &'a HashMap<i64, Vec<i64>>,
 }
 
 impl<'a> PartialEq for UpdateElem<'a> {
