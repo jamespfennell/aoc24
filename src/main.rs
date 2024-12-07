@@ -2,6 +2,7 @@ mod day1;
 mod day2;
 mod day3;
 mod day4;
+mod day5;
 mod input;
 
 fn main() {
@@ -39,7 +40,7 @@ macro_rules! days {
                     }
                     #[test]
                     fn test_problem_2() {
-                        super::super::run_test($answer1.into(), super::super::$package::problem_1, stringify![$package]);
+                        super::super::run_test($answer2.into(), super::super::$package::problem_2, stringify![$package]);
                     }
                 }
             )+
@@ -52,6 +53,7 @@ days!(
     (day2, 341, 404),
     (day3, 182780583, 90772405),
     (day4, 2462, 1877),
+    (day5, 4637, None),
 );
 
 fn load_data(file_name: &str) -> String {
