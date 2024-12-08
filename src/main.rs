@@ -5,6 +5,24 @@ mod day4;
 mod day5;
 mod day6;
 mod day7;
+mod day8;
+mod day9;
+mod day10;
+mod day11;
+mod day12;
+mod day13;
+mod day14;
+mod day15;
+mod day16;
+mod day17;
+mod day18;
+mod day19;
+mod day20;
+mod day21;
+mod day22;
+mod day23;
+mod day24;
+mod day25;
 mod input;
 
 fn main() {
@@ -58,6 +76,24 @@ days!(
     (day5, 4637, 6370),
     (day6, 5145, 1523),
     (day7, 2299996598890, 362646859298554),
+    (day8, None, None),
+    (day9, None, None),
+    (day10, None, None),
+    (day11, None, None),
+    (day12, None, None),
+    (day13, None, None),
+    (day14, None, None),
+    (day15, None, None),
+    (day16, None, None),
+    (day17, None, None),
+    (day18, None, None),
+    (day19, None, None),
+    (day20, None, None),
+    (day21, None, None),
+    (day22, None, None),
+    (day23, None, None),
+    (day24, None, None),
+    (day25, None, None),
 );
 
 fn load_data(file_name: &str) -> String {
