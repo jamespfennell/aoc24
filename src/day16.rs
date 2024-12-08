@@ -1,4 +1,3 @@
-
 pub fn problem_1(_data: &str) -> i64 {
     0
 }
