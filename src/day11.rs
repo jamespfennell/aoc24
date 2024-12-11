@@ -1,32 +1,41 @@
+use std::collections::HashMap;
+
 pub fn problem_1(data: &str) -> i64 {
-    let mut stones: Vec<i64> = data
+    run(data, 25)
+}
+
+pub fn problem_2(data: &str) -> i64 {
+    run(data, 75)
+}
+
+pub fn run(data: &str, n: usize) -> i64 {
+    let mut stones: HashMap<i64, i64> = data
         .split_ascii_whitespace()
-        .map(|word| word.parse::<i64>().unwrap())
+        .map(|word| (word.parse::<i64>().unwrap(), 1))
         .collect();
-    for _ in 0..25 {
+    for _ in 0..n {
         stones = blink_once(&stones);
     }
-    stones.len().try_into().unwrap()
+    stones.values().sum()
 }
 
-pub fn problem_2(_data: &str) -> i64 {
-    0
-}
-
-fn blink_once(stones: &[i64]) -> Vec<i64> {
-    let mut out = vec![];
-    for &stone in stones {
+fn blink_once(stones: &HashMap<i64, i64>) -> HashMap<i64, i64> {
+    let mut out: HashMap<i64, i64> = Default::default();
+    for (&stone, &frequency) in stones {
+        let mut insert = |new_stone: i64| {
+            *out.entry(new_stone).or_default() += frequency;
+        };
         if stone == 0 {
-            out.push(1);
+            insert(1);
             continue;
         }
         let l = log_base_10(stone);
         if l % 2 == 0 {
             let d = (10_i64).pow(l / 2);
-            out.push(stone / d);
-            out.push(stone % d);
+            insert(stone / d);
+            insert(stone % d);
         } else {
-            out.push(stone * 2024);
+            insert(stone * 2024);
         }
     }
     out
@@ -49,10 +58,5 @@ mod test {
     #[test]
     fn test_problem_1() {
         assert_eq!(55312, problem_1(DATA));
-    }
-
-    #[test]
-    fn test_problem_2() {
-        assert_eq!(0, problem_2(DATA));
     }
 }
