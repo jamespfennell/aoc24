@@ -79,7 +79,7 @@ days!(
     (day8, 336, 1131),
     (day9, 6288707484810, 6311837662089),
     (day10, 552, 1225),
-    (day11, None, None),
+    (day11, 187738, None),
     (day12, None, None),
     (day13, None, None),
     (day14, None, None),
