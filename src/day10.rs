@@ -1,31 +1,54 @@
 use std::collections::HashSet;
 
 pub fn problem_1(data: &str) -> i64 {
+    let (rows, reachable) = build_reachable(data);
+    let mut total = 0;
+    let mut set: HashSet<(usize, usize)> = Default::default();
+    for r in 0..reachable.len() {
+        for c in 0..reachable[0].len() {
+            if rows[r][c] != 0 {
+                continue;
+            }
+            set.clear();
+            set.extend(&reachable[r][c]);
+            total += set.len();
+        }
+    }
+    total.try_into().unwrap()
+}
+
+pub fn problem_2(data: &str) -> i64 {
+    let (rows, reachable) = build_reachable(data);
+    let mut total = 0;
+    for r in 0..reachable.len() {
+        for c in 0..reachable[0].len() {
+            if rows[r][c] != 0 {
+                continue;
+            }
+            total += reachable[r][c].len();
+        }
+    }
+    total.try_into().unwrap()
+}
+
+fn build_reachable(data: &str) -> (Vec<Vec<u32>>, Vec<Vec<Vec<(usize, usize)>>>) {
     let rows: Vec<Vec<u32>> = data
         .lines()
         .map(|line| line.chars().map(|c| c.to_digit(10).unwrap()).collect())
         .collect();
     let max_r = rows.len();
     let max_c = rows[0].len();
-    let mut reachable: Vec<Vec<HashSet<(usize, usize)>>> = rows
+    let mut reachable: Vec<Vec<Vec<(usize, usize)>>> = rows
         .iter()
         .enumerate()
         .map(|(r, row)| {
             row.iter()
                 .enumerate()
-                .map(|(c, cell)| {
-                    if *cell == 9 {
-                        let mut h = HashSet::new();
-                        h.insert((r, c));
-                        h
-                    } else {
-                        HashSet::new()
-                    }
-                })
+                .map(|(c, cell)| if *cell == 9 { vec![(r, c)] } else { vec![] })
                 .collect()
         })
         .collect();
-    let mut temp: HashSet<(usize, usize)> = Default::default();
+    let mut temp: Vec<(usize, usize)> = Default::default();
     for level in (0..9).rev() {
         for r in 0..max_r {
             for c in 0..max_c {
@@ -45,27 +68,14 @@ pub fn problem_1(data: &str) -> i64 {
                     }
                     std::mem::swap(&mut temp, &mut reachable[next_r][next_c]);
                     for other in &temp {
-                        reachable[r][c].insert(*other);
+                        reachable[r][c].push(*other);
                     }
                     std::mem::swap(&mut temp, &mut reachable[next_r][next_c]);
                 }
             }
         }
     }
-    let mut total = 0;
-    for c in 0..max_c {
-        for r in 0..max_r {
-            if rows[r][c] != 0 {
-                continue;
-            }
-            total += reachable[r][c].len();
-        }
-    }
-    total.try_into().unwrap()
-}
-
-pub fn problem_2(_data: &str) -> i64 {
-    0
+    (rows, reachable)
 }
 
 struct Neighbors {
@@ -139,10 +149,11 @@ mod test {
 
     #[test]
     fn test_problem_2_data_1() {
-        assert_eq!(0, problem_2(DATA_1));
+        assert_eq!(16, problem_2(DATA_1));
     }
+
     #[test]
     fn test_problem_2_data_2() {
-        assert_eq!(0, problem_2(DATA_2));
+        assert_eq!(81, problem_2(DATA_2));
     }
 }
