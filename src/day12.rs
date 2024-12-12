@@ -180,33 +180,12 @@ ABBAAA
 ABBAAA
 AAAAAA";
 
-    #[test]
-    fn test_problem_1_data_1() {
-        assert_eq!(140, problem_1(DATA_1));
-    }
-
-    #[test]
-    fn test_problem_1_data_2() {
-        assert_eq!(1930, problem_1(DATA_2));
-    }
-
-    #[test]
-    fn test_problem_2_data_1() {
-        assert_eq!(80, problem_2(DATA_1));
-    }
-
-    #[test]
-    fn test_problem_2_data_2() {
-        assert_eq!(1206, problem_2(DATA_2));
-    }
-
-    #[test]
-    fn test_problem_2_data_3() {
-        assert_eq!(236, problem_2(DATA_3));
-    }
-
-    #[test]
-    fn test_problem_2_data_4() {
-        assert_eq!(368, problem_2(DATA_4));
-    }
+    super::super::tests::tests!(
+        (test_problem_1_data_1, problem_1, DATA_1, 140),
+        (test_problem_1_data_2, problem_1, DATA_2, 1930),
+        (test_problem_2_data_1, problem_2, DATA_1, 80),
+        (test_problem_2_data_2, problem_2, DATA_2, 1206),
+        (test_problem_2_data_3, problem_2, DATA_3, 236),
+        (test_problem_2_data_4, problem_2, DATA_4, 368),
+    );
 }

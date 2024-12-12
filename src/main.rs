@@ -25,6 +25,8 @@ mod day8;
 mod day9;
 mod input;
 mod iter;
+#[cfg(test)]
+mod tests;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();

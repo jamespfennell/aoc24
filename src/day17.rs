@@ -11,13 +11,8 @@ mod test {
     use super::*;
     const DATA: &str = "";
 
-    #[test]
-    fn test_problem_1() {
-        assert_eq!(0, problem_1(DATA));
-    }
-
-    #[test]
-    fn test_problem_2() {
-        assert_eq!(0, problem_2(DATA));
-    }
+    super::super::tests::tests!(
+        (test_problem_1_data_1, problem_1, DATA, 0),
+        (test_problem_2_data_1, problem_2, DATA, 0),
+    );
 }
