@@ -24,6 +24,7 @@ mod day7;
 mod day8;
 mod day9;
 mod input;
+mod iter;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -80,7 +81,7 @@ days!(
     (day9, 6288707484810, 6311837662089),
     (day10, 552, 1225),
     (day11, 187738, 223767210249237),
-    (day12, None, None),
+    (day12,1431440, None),
     (day13, None, None),
     (day14, None, None),
     (day15, None, None),
