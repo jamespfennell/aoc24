@@ -1,18 +1,22 @@
+use std::i64;
+
 use regex::Regex;
 
 pub fn problem_1(data: &str) -> i64 {
-    // 29853 <- too high
-    parse_machines(data)
+    parse_machines(data, 0)
         .into_iter()
-        .filter_map(|m| m.min_price_to_win())
+        .filter_map(|m| m.min_price_to_win(100))
         .sum()
 }
 
-pub fn problem_2(_data: &str) -> i64 {
-    0
+pub fn problem_2(data: &str) -> i64 {
+    parse_machines(data, 10000000000000)
+        .into_iter()
+        .filter_map(|m| m.min_price_to_win(i64::MAX))
+        .sum()
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Machine {
     button_a: (i64, i64),
     button_b: (i64, i64),
@@ -20,30 +24,33 @@ struct Machine {
 }
 
 impl Machine {
-    fn min_price_to_win(&self) -> Option<i64> {
-        let mut price: Option<i64> = None;
-        // We push button_b up to 100 times - the puzzle says it won't be more
-        // In fact the puzzle gives the wrong answer if you allow more than 100.
-        for push_b in 0..=100_i64 {
-            let Some(remainder_0) = self.prize.0.checked_sub(self.button_b.0 * push_b) else {
-                break;
-            };
-            let Some(remainder_1) = self.prize.1.checked_sub(self.button_b.1 * push_b) else {
-                break;
-            };
-            if (remainder_0 % self.button_a.0 != 0) && (remainder_1 % self.button_a.0 != 0) {
-                continue;
-            }
-            let push_a = remainder_0 / self.button_a.0;
-            if push_a != remainder_1 / self.button_a.1 {
-                continue;
-            }
-            if push_a > 100 {
-                continue;
-            }
-            price = Some(push_b + 3 * (remainder_0 / self.button_a.0));
+    fn min_price_to_win(&self, max_pushes: i64) -> Option<i64> {
+        let Machine {
+            button_a: (a_0, a_1),
+            button_b: (b_0, b_1),
+            prize: (p_0, p_1),
+        } = *self;
+        let det = a_0 * b_1 - a_1 * b_0;
+        if det == 0 {
+            panic!("linearly dependent vectors - can't solve with current algorithm {self:?}");
         }
-        price
+        let push_a_times_det = b_1 * p_0 - b_0 * p_1;
+        let push_b_times_det = -a_1 * p_0 + a_0 * p_1;
+        if push_a_times_det % det != 0 || push_b_times_det % det != 0 {
+            // Would require a fractional number of moves
+            return None;
+        }
+        let push_a = push_a_times_det / det;
+        let push_b = push_b_times_det / det;
+        if push_a < 0 || push_b < 0 {
+            // Would require negative moves
+            return None;
+        }
+        if push_a > max_pushes || push_b > max_pushes {
+            // Would require more than the max moves
+            return None;
+        }
+        Some(3 * push_a + push_b)
     }
 }
 
@@ -51,7 +58,7 @@ const RE: &str = r"Button A: X\+([0-9]+), Y\+([0-9]+)
 Button B: X\+([0-9]+), Y\+([0-9]+)
 Prize: X=([0-9]+), Y=([0-9]+)";
 
-fn parse_machines(data: &str) -> Vec<Machine> {
+fn parse_machines(data: &str, prize_increment: i64) -> Vec<Machine> {
     Regex::new(RE)
         .unwrap()
         .captures_iter(data)
@@ -59,7 +66,10 @@ fn parse_machines(data: &str) -> Vec<Machine> {
         .map(|(_, matches)| Machine {
             button_a: (matches[0].parse().unwrap(), matches[1].parse().unwrap()),
             button_b: (matches[2].parse().unwrap(), matches[3].parse().unwrap()),
-            prize: (matches[4].parse().unwrap(), matches[5].parse().unwrap()),
+            prize: (
+                matches[4].parse::<i64>().unwrap() + prize_increment,
+                matches[5].parse::<i64>().unwrap() + prize_increment,
+            ),
         })
         .collect()
 }
@@ -86,6 +96,6 @@ Prize: X=18641, Y=10279
 
     super::super::tests::tests!(
         (test_problem_1_data_1, problem_1, DATA, 480),
-        (test_problem_2_data_1, problem_2, DATA, 0),
+        (test_problem_2_data_1, problem_2, DATA, 875318608908),
     );
 }
