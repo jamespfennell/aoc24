@@ -23,10 +23,10 @@ pub fn run(data: &str, doubling_mode: bool) -> i64 {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Square {
     Wall,
+    Empty,
     Box,
     LeftBox,
     RightBox,
-    Empty,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -44,14 +44,6 @@ impl Instruction {
             Instruction::Down => (r + 1, c),
             Instruction::Left => (r, c - 1),
             Instruction::Right => (r, c + 1),
-        }
-    }
-    fn inverse(&self) -> Instruction {
-        match self {
-            Instruction::Up => Instruction::Down,
-            Instruction::Down => Instruction::Up,
-            Instruction::Left => Instruction::Right,
-            Instruction::Right => Instruction::Left,
         }
     }
 }
@@ -122,116 +114,53 @@ impl State {
 
     fn apply_instruction(&mut self, i: usize) {
         let instruction = self.instructions[i];
-        let is_horizontal = instruction == Instruction::Left || instruction == Instruction::Right;
-
-        // Where we are at the start
-        let current = self.pos;
-        // Where we will potentially be at the end of this turn if there are no obstructions
-        let next = instruction.next(current);
-        match (self.get_cell(next), is_horizontal) {
-            (Square::Wall, _) => {
-                // hit a wall
-                return;
-            }
-            (Square::Empty, _) => {
-                // empty space just move in
-            }
-            (Square::Box, _) | (Square::LeftBox, true) | (Square::RightBox, true) => {
-                // we try to push the box or series of boxes.
-                // this will only work if there is a line of boxes followed by an empty space.
-                // pushing the boxes is equivalent to swapping the first box with this empty space
-                let mut possibly_empty = next;
-                while {
-                    let sq = self.get_cell(possibly_empty);
-                    sq != Square::Empty && sq != Square::Wall
-                } {
-                    possibly_empty = instruction.next(possibly_empty);
-                }
-                if self.get_cell(possibly_empty) != Square::Empty {
-                    return;
-                }
-                self.set_cell(possibly_empty, self.get_cell(next));
-                self.set_cell(next, Square::Empty);
-
-                // we have to fix up the wide boxes which were inverted
-                let mut box_square = possibly_empty;
-                loop {
-                    match self.get_cell(box_square) {
-                        Square::Wall => unreachable!(),
-                        Square::Box => break,
-                        Square::LeftBox => {
-                            self.set_cell(box_square, Square::RightBox);
-                        }
-                        Square::RightBox => {
-                            self.set_cell(box_square, Square::LeftBox);
-                        }
-                        Square::Empty => break,
+        let mut to_shift: Vec<HashSet<(usize, usize)>> = vec![[self.pos].into()];
+        loop {
+            // check if we can shift the cells in the last row up.
+            let mut new_cs: HashSet<(usize, usize)> = Default::default();
+            for &prev in to_shift.last().unwrap() {
+                let next = instruction.next(prev);
+                match self.get_cell(next) {
+                    Square::Wall => {
+                        // If there is any wall blocking, can't push.
+                        return;
                     }
-                    box_square = instruction.inverse().next(box_square);
-                }
-            }
-            (sq @ Square::LeftBox, false) | (sq @ Square::RightBox, false) => {
-                // For each row that has some cells being shifted, contains the c indexes
-                // that will be shifted up.
-                let mut to_shift: Vec<HashSet<usize>> = vec![if sq == Square::LeftBox {
-                    [next.1, next.1 + 1].into()
-                } else {
-                    [next.1 - 1, next.1].into()
-                }];
-                let mut r = next.0;
-                loop {
-                    let r_next = if instruction == Instruction::Up {
-                        r - 1
-                    } else {
-                        r + 1
-                    };
-                    r = r_next;
-                    // check if we can shift the cells in the last row up.
-                    let mut new_cs: HashSet<usize> = Default::default();
-                    for &c in to_shift.last().unwrap() {
-                        match self.get_cell((r_next, c)) {
-                            Square::Wall => {
-                                // If there is any wall blocking, can't push.
-                                return;
-                            }
-                            Square::Box => unreachable!(),
-                            Square::LeftBox => {
-                                new_cs.insert(c);
-                                new_cs.insert(c + 1);
-                            }
-                            Square::RightBox => {
-                                new_cs.insert(c - 1);
-                                new_cs.insert(c);
-                            }
-                            Square::Empty => {}
+                    Square::Empty => {}
+                    Square::Box => {
+                        new_cs.insert(next);
+                    }
+                    Square::LeftBox => {
+                        new_cs.insert(next);
+                        if instruction == Instruction::Down || instruction == Instruction::Up {
+                            new_cs.insert((next.0, next.1 + 1));
                         }
                     }
-                    // If there are no cells in the next row that will push upwards/downwards,
-                    // we are done and can move the thing.
-                    if new_cs.is_empty() {
-                        break;
+                    Square::RightBox => {
+                        new_cs.insert(next);
+                        if instruction == Instruction::Down || instruction == Instruction::Up {
+                            new_cs.insert((next.0, next.1 - 1));
+                        }
                     }
-                    to_shift.push(new_cs);
                 }
+            }
+            // If there are no cells in the next row that will push upwards/downwards,
+            // we are done and can move the thing.
+            if new_cs.is_empty() {
+                break;
+            }
+            to_shift.push(new_cs);
+        }
 
-                // If we made it to here, we can push.
-                while let Some(cs) = to_shift.pop() {
-                    // We're now going in the reverse direction
-                    let r_next = if instruction == Instruction::Up {
-                        r + 1
-                    } else {
-                        r - 1
-                    };
-                    for c in cs {
-                        let sq_to_move = self.get_cell((r_next, c));
-                        self.set_cell((r, c), sq_to_move);
-                        self.set_cell((r_next, c), Square::Empty);
-                    }
-                    r = r_next;
-                }
+        // If we made it to here, we can push.
+        while let Some(cs) = to_shift.pop() {
+            for source in cs {
+                let sq_to_move = self.get_cell(source);
+                let target = instruction.next(source);
+                self.set_cell(target, sq_to_move);
+                self.set_cell(source, Square::Empty);
             }
         }
-        self.pos = next;
+        self.pos = instruction.next(self.pos);
     }
 
     fn calculate_gps(&self) -> i64 {
@@ -246,7 +175,7 @@ impl State {
         gps.try_into().unwrap()
     }
 
-    fn print_grid(&self) {
+    fn _print_grid(&self) {
         let mut s = String::new();
         for (r, row) in self.grid.iter().enumerate() {
             s.clear();
@@ -256,8 +185,8 @@ impl State {
                 } else {
                     s.push(match square {
                         Square::Wall => '#',
-                        Square::Box => 'O',
                         Square::Empty => '.',
+                        Square::Box => '0',
                         Square::LeftBox => '[',
                         Square::RightBox => ']',
                     });
