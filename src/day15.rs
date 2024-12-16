@@ -1,3 +1,4 @@
+use super::common::Direction;
 use std::collections::HashSet;
 
 pub fn problem_1(data: &str) -> i64 {
@@ -29,30 +30,11 @@ enum Square {
     RightBox,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Instruction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Instruction {
-    fn next(&self, (r, c): (usize, usize)) -> (usize, usize) {
-        match self {
-            Instruction::Up => (r - 1, c),
-            Instruction::Down => (r + 1, c),
-            Instruction::Left => (r, c - 1),
-            Instruction::Right => (r, c + 1),
-        }
-    }
-}
-
 #[derive(Default, Debug)]
 struct State {
     grid: Vec<Vec<Square>>,
     pos: (usize, usize),
-    instructions: Vec<Instruction>,
+    instructions: Vec<Direction>,
 }
 
 impl State {
@@ -92,10 +74,10 @@ impl State {
         for (_, line) in lines {
             for c in line.chars() {
                 input.instructions.push(match c {
-                    '^' => Instruction::Up,
-                    '>' => Instruction::Right,
-                    'v' => Instruction::Down,
-                    '<' => Instruction::Left,
+                    '^' => Direction::Up,
+                    '>' => Direction::Right,
+                    'v' => Direction::Down,
+                    '<' => Direction::Left,
                     '\n' => continue,
                     _ => panic!["invalid char {c} in instructions input"],
                 });
@@ -131,13 +113,13 @@ impl State {
                     }
                     Square::LeftBox => {
                         new_cs.insert(next);
-                        if instruction == Instruction::Down || instruction == Instruction::Up {
+                        if instruction == Direction::Down || instruction == Direction::Up {
                             new_cs.insert((next.0, next.1 + 1));
                         }
                     }
                     Square::RightBox => {
                         new_cs.insert(next);
-                        if instruction == Instruction::Down || instruction == Instruction::Up {
+                        if instruction == Direction::Down || instruction == Direction::Up {
                             new_cs.insert((next.0, next.1 - 1));
                         }
                     }

@@ -1,3 +1,4 @@
+use super::common::Direction;
 use std::{
     collections::{HashMap, HashSet},
     hash::Hash,
@@ -189,51 +190,6 @@ fn find_smallest<V: Clone>(pending: &HashMap<V, LowestPrice<V>>) -> Option<(V, i
         }
     }
     v_or.map(|(v, c)| (v.clone(), c))
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Direction {
-    fn next(&self, (r, c): (usize, usize)) -> (usize, usize) {
-        use Direction::*;
-        match self {
-            Up => (r - 1, c),
-            Down => (r + 1, c),
-            Left => (r, c - 1),
-            Right => (r, c + 1),
-        }
-    }
-    // mark used.
-    fn opposite(&self) -> Self {
-        use Direction::*;
-        match self {
-            Up => Down,
-            Down => Up,
-            Left => Right,
-            Right => Left,
-        }
-    }
-    fn orthogonal(&self) -> [Self; 2] {
-        use Direction::*;
-        match self {
-            Up | Down => [Left, Right],
-            Left | Right => [Up, Down],
-        }
-    }
-    fn all_directions() -> [Self; 4] {
-        [
-            Direction::Down,
-            Direction::Left,
-            Direction::Right,
-            Direction::Up,
-        ]
-    }
 }
 
 #[cfg(test)]

@@ -1,3 +1,4 @@
+mod common;
 mod day1;
 mod day10;
 mod day11;
