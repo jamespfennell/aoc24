@@ -1,4 +1,8 @@
-use std::{collections::HashMap, hash::Hash, i64};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::Hash,
+    i64,
+};
 
 pub fn problem_1(data: &str) -> i64 {
     let grid: Vec<Vec<char>> = data.lines().map(|line| line.chars().collect()).collect();
@@ -10,7 +14,7 @@ pub fn problem_1(data: &str) -> i64 {
     };
     assert_eq!(grid[start.r][start.c], 'S');
     let lowest_prices = calculate_lowest_prices(edges, start);
-    *Direction::all_directions()
+    Direction::all_directions()
         .map(|direction| {
             let end = Vertex {
                 r: 1,
@@ -18,15 +22,58 @@ pub fn problem_1(data: &str) -> i64 {
                 direction,
             };
             assert_eq!(grid[end.r][end.c], 'E');
-            lowest_prices.get(&end).unwrap()
+            lowest_prices.get(&end).unwrap().clone()
         })
         .into_iter()
+        .map(|l| l.price)
         .min()
         .unwrap()
 }
 
-pub fn problem_2(_data: &str) -> i64 {
-    0
+pub fn problem_2(data: &str) -> i64 {
+    let grid: Vec<Vec<char>> = data.lines().map(|line| line.chars().collect()).collect();
+    let edges = build_edges(&grid);
+    let start = Vertex {
+        r: grid.len() - 2,
+        c: 1,
+        direction: Direction::Right,
+    };
+    assert_eq!(grid[start.r][start.c], 'S');
+    let lowest_prices = calculate_lowest_prices(edges, start);
+    let ends = Direction::all_directions().map(|direction| {
+        let end = Vertex {
+            r: 1,
+            c: grid[0].len() - 2,
+            direction,
+        };
+        assert_eq!(grid[end.r][end.c], 'E');
+        (end.clone(), lowest_prices.get(&end).unwrap().clone())
+    });
+    let min_price = ends.iter().map(|l| l.1.price).min().unwrap();
+
+    let mut good_v: HashSet<Vertex> = Default::default();
+    let mut pending: Vec<Vertex> = Default::default();
+    for (v, end) in ends {
+        if end.price != min_price {
+            continue;
+        }
+        good_v.insert(v);
+        for source in end.sources {
+            pending.push(source);
+        }
+    }
+    while let Some(v) = pending.pop() {
+        if good_v.contains(&v) {
+            continue;
+        }
+        for source in &lowest_prices.get(&v).unwrap().sources {
+            pending.push(source.clone());
+        }
+        good_v.insert(v.clone());
+    }
+
+    let good_tiles: HashSet<(usize, usize)> = good_v.into_iter().map(|v| v.pos()).collect();
+    good_tiles.len().try_into().unwrap()
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -34,6 +81,12 @@ struct Vertex {
     r: usize,
     c: usize,
     direction: Direction,
+}
+
+impl Vertex {
+    fn pos(&self) -> (usize, usize) {
+        (self.r, self.c)
+    }
 }
 
 fn build_edges(grid: &[Vec<char>]) -> HashMap<Vertex, Vec<(Vertex, i64)>> {
@@ -71,15 +124,27 @@ fn build_edges(grid: &[Vec<char>]) -> HashMap<Vertex, Vec<(Vertex, i64)>> {
     edges
 }
 
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+struct LowestPrice<V> {
+    price: i64,
+    sources: Vec<V>,
+}
+
 fn calculate_lowest_prices<V: Eq + Hash + Clone>(
     edges: HashMap<V, Vec<(V, i64)>>,
     start: V,
-) -> HashMap<V, i64> {
-    let mut prices: HashMap<V, i64> = Default::default();
-    let mut pending: HashMap<V, i64> = Default::default();
-    pending.insert(start, 0);
+) -> HashMap<V, LowestPrice<V>> {
+    let mut prices: HashMap<V, LowestPrice<V>> = Default::default();
+    let mut pending: HashMap<V, LowestPrice<V>> = Default::default();
+    pending.insert(
+        start,
+        LowestPrice {
+            price: 0,
+            sources: vec![],
+        },
+    );
     while let Some((v, price)) = find_smallest(&pending) {
-        pending.remove(&v).unwrap();
+        let lowest_price = pending.remove(&v).unwrap();
         if let Some(edges) = edges.get(&v) {
             for (dest, cost) in edges {
                 // We've already found the cheapest price for this dest vertex
@@ -87,27 +152,40 @@ fn calculate_lowest_prices<V: Eq + Hash + Clone>(
                     continue;
                 }
                 let candidate = price + cost;
-                let current = pending.entry(dest.clone()).or_insert(candidate);
-                if candidate < *current {
-                    *current = candidate;
+                let current = pending.entry(dest.clone()).or_insert(LowestPrice {
+                    price: i64::MAX,
+                    sources: vec![],
+                });
+                use std::cmp::Ordering;
+                match candidate.cmp(&current.price) {
+                    Ordering::Less => {
+                        *current = LowestPrice {
+                            price: candidate,
+                            sources: vec![v.clone()],
+                        }
+                    }
+                    Ordering::Equal => {
+                        current.sources.push(v.clone());
+                    }
+                    Ordering::Greater => {}
                 }
             }
         }
-        prices.insert(v, price);
+        prices.insert(v, lowest_price);
     }
     prices
 }
 
 // TODO: we could use a heap to avoid paying O(n) to find the smallest value.
-fn find_smallest<V: Clone>(pending: &HashMap<V, i64>) -> Option<(V, i64)> {
+fn find_smallest<V: Clone>(pending: &HashMap<V, LowestPrice<V>>) -> Option<(V, i64)> {
     let mut v_or = None;
     for (k, v) in pending {
         let smaller = match v_or {
             None => true,
-            Some((_, v_other)) => *v < v_other,
+            Some((_, v_other)) => v.price < v_other,
         };
         if smaller {
-            v_or = Some((k, *v));
+            v_or = Some((k, v.price));
         }
     }
     v_or.map(|(v, c)| (v.clone(), c))
@@ -198,6 +276,7 @@ mod test {
     super::super::tests::tests!(
         (test_problem_1_data_1, problem_1, DATA_1, 7036),
         (test_problem_1_data_2, problem_1, DATA_2, 11048),
-        (test_problem_2_data_1, problem_2, DATA_1, 0),
+        (test_problem_2_data_1, problem_2, DATA_1, 45),
+        (test_problem_2_data_2, problem_2, DATA_2, 64),
     );
 }
