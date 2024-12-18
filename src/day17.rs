@@ -1,14 +1,77 @@
 pub fn problem_1(data: &str) -> i64 {
     let mut machine = parse_input(data);
-    println!("ins={:?}", machine.ins);
-    let output = machine.run();
+    let mut output: Vec<u8> = vec![];
+    machine.run(|d| {
+        output.push(d);
+        true
+    });
+    let mut r = 0_i64;
+    for d in &output {
+        r = r * 10 + (*d as i64);
+    }
     let output: Vec<String> = output.into_iter().map(|i| format!("{i}")).collect();
     println!("{}", output.join(","));
-    1
+    r
 }
 
-pub fn problem_2(_data: &str) -> i64 {
-    0
+pub fn problem_2(data: &str) -> i64 {
+    let mut machine = parse_input(data);
+    let raw_ins = machine.raw_ins.clone();
+
+    // Initially tried to brute force it, but it was too slow.
+    //
+    // The following search algorithm is based on the observation that the program:
+    // 1. is a loop
+    // 2. at the start of each iteration sets b and c to some fixed function of a
+    // 3. outputs one digit each iteration
+    // 4. thus because of 2 and 3, the single digit output is a pure function of a
+    // 5. after each iteration runs a=a/8 and exits if a==0
+    //
+    // So if you start with a=1000 say, then
+    // - Will output digit based on a = 1000, set a = 1000/8 = 125
+    // - Will output digit based on a = 125, set a = 125/8 = 15
+    // - Will output digit based on a = 15, set a = 15/8 = 1
+    // - Will output digit based on a = 1, then exit
+    //
+    // Thinking in octal, the observation is that the last digit output is just based
+    // on the last octal digit of A; the second last digit output is based on the second last
+    // octal digit of A and so on.
+    //
+    // Thus in the search algorithm we find the octal digits of A, starting from
+    // the least significant.
+
+    // Candidate values of A we are considering at each step
+    let mut candidates: Vec<i64> = vec![0];
+    // num_out is the number of octal digits we expect the program to output
+    // for each of the candidates.
+    for num_out in 1..=machine.raw_ins.len() {
+        let mut new_candidates: Vec<i64> = vec![];
+        for candidate in &candidates {
+            for lsd in 0..8 {
+                let a = candidate * 8 + lsd;
+                if a == 0 {
+                    continue;
+                }
+                machine.reg = Registers { a, b: 0, c: 0 };
+                // We want to to check that the first value outputed by the program matches
+                // the digit here.
+                let digit_to_match = raw_ins[raw_ins.len() - num_out];
+                let mut matches = false;
+                machine.run(|d| {
+                    matches = d == digit_to_match;
+                    // We can exit early.
+                    // From the previous iteration of the candidates
+                    // we know that all of the other digits will match.
+                    false
+                });
+                if matches {
+                    new_candidates.push(a);
+                }
+            }
+        }
+        candidates = new_candidates;
+    }
+    candidates.into_iter().min().unwrap()
 }
 
 #[derive(Debug, Clone)]
@@ -17,6 +80,7 @@ struct Registers {
     b: i64,
     c: i64,
 }
+
 #[derive(Debug, Clone)]
 enum Op {
     Adv,
@@ -33,42 +97,24 @@ enum Op {
 struct Machine {
     reg: Registers,
     ins: Vec<(Op, u8)>,
-    ip: usize,
+    raw_ins: Vec<u8>,
 }
 
 impl Machine {
-    fn run(&mut self) -> Vec<u8> {
-        let mut output = vec![];
+    fn run<F: FnMut(u8) -> bool>(&mut self, mut output_fn: F) {
+        let mut ip = 0_usize;
         loop {
-            assert_eq!(self.ip % 2, 0);
-            let Some((op, literal_operand)) = self.ins.get(self.ip / 2).cloned() else {
+            assert_eq!(ip % 2, 0);
+            let Some((op, literal_operand)) = self.ins.get(ip / 2).cloned() else {
                 break;
             };
-            // println!("ip={}", self.ip);
-            let combo_operand = || {match literal_operand {
+            let combo_operand = || match literal_operand {
                 0..=3 => literal_operand as i64,
                 4 => self.reg.a,
                 5 => self.reg.b,
                 6 => self.reg.c,
                 _ => panic!("unexpected literal_operand={literal_operand}"),
-            }};
-            /*
-            The adv instruction (opcode 0) performs division. The numerator is the value in the A register. The denominator is found by raising 2 to the power of the instruction's combo operand. (So, an operand of 2 would divide A by 4 (2^2); an operand of 5 would divide A by 2^B.) The result of the division operation is truncated to an integer and then written to the A register.
-
-            The bxl instruction (opcode 1) calculates the bitwise XOR of register B and the instruction's literal operand, then stores the result in register B.
-
-            The bst instruction (opcode 2) calculates the value of its combo operand modulo 8 (thereby keeping only its lowest 3 bits), then writes that value to the B register.
-
-            The jnz instruction (opcode 3) does nothing if the A register is 0. However, if the A register is not zero, it jumps by setting the instruction pointer to the value of its literal operand; if this instruction jumps, the instruction pointer is not increased by 2 after this instruction.
-
-            The bxc instruction (opcode 4) calculates the bitwise XOR of register B and register C, then stores the result in register B. (For legacy reasons, this instruction reads an operand but ignores it.)
-
-            The out instruction (opcode 5) calculates the value of its combo operand modulo 8, then outputs that value. (If a program outputs multiple values, they are separated by commas.)
-
-            The bdv instruction (opcode 6) works exactly like the adv instruction except that the result is stored in the B register. (The numerator is still read from the A register.)
-
-            The cdv instruction (opcode 7) works exactly like the adv instruction except that the result is stored in the C register. (The numerator is still read from the A register.)
-            */
+            };
             match op {
                 Op::Adv => {
                     self.reg.a = calculate_dv(self.reg.a, combo_operand());
@@ -81,7 +127,7 @@ impl Machine {
                 }
                 Op::Jnz => {
                     if self.reg.a != 0 {
-                        self.ip = literal_operand.into();
+                        ip = literal_operand.into();
                         continue;
                     }
                 }
@@ -89,7 +135,10 @@ impl Machine {
                     self.reg.b = self.reg.b ^ self.reg.c;
                 }
                 Op::Out => {
-                    output.push((combo_operand() % 8).try_into().unwrap());
+                    let keep_going = output_fn((combo_operand() % 8).try_into().unwrap());
+                    if !keep_going {
+                        return;
+                    }
                 }
                 Op::Bdv => {
                     self.reg.b = calculate_dv(self.reg.a, combo_operand());
@@ -98,9 +147,8 @@ impl Machine {
                     self.reg.c = calculate_dv(self.reg.a, combo_operand());
                 }
             }
-            self.ip += 2;
+            ip += 2;
         }
-        output
     }
 }
 
@@ -118,7 +166,7 @@ fn parse_input(data: &str) -> Machine {
     let mut input = Machine {
         reg: Registers { a: 0, b: 0, c: 0 },
         ins: vec![],
-        ip: 0,
+        raw_ins: vec![],
     };
     for (prefix, target) in [
         ("Register A: ", &mut input.reg.a),
@@ -165,6 +213,10 @@ fn parse_input(data: &str) -> Machine {
         // Consume semicolon
         iter.next();
         input.ins.push((op, operand));
+        input
+            .raw_ins
+            .push(cl.to_digit(10).unwrap().try_into().unwrap());
+        input.raw_ins.push(operand);
     }
     input
 }
@@ -172,15 +224,25 @@ fn parse_input(data: &str) -> Machine {
 #[cfg(test)]
 mod test {
     use super::*;
-    const DATA: &str = "Register A: 729
+    const DATA_1: &str = "Register A: 729
 Register B: 0
 Register C: 0
 
 Program: 0,1,5,4,3,0";
 
+    const DATA_2: &str = "Register A: 2024
+Register B: 0
+Register C: 0
+
+Program: 0,3,5,4,3,0";
+
     super::super::tests::tests!(
-        // 4,6,3,5,6,3,5,2,1,0
-        (test_problem_1_data_1, problem_1, DATA, 0),
-        (test_problem_2_data_1, problem_2, DATA, 0),
+        (
+            test_problem_1_data_1,
+            problem_1,
+            DATA_1,
+            4_6_3_5_6_3_5_2_1_0
+        ),
+        (test_problem_2_data_2, problem_2, DATA_2, 117440),
     );
 }
