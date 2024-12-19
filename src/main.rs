@@ -42,17 +42,16 @@ macro_rules! days {
     ( $( ($package: ident, $answer1: expr, $answer2: expr), )+ ) => {
         fn print_problem_answer(day: &str, problem: &str) {
             let day = format!["day{day}"];
-            let f = match (day.as_str(), problem) {
+            let data = load_data(&day);
+            let answer = match (day.as_str(), problem) {
                 $(
-                    (stringify![$package], "1") => $package::problem_1,
-                    (stringify![$package], "2") => $package::problem_2,
+                    (stringify![$package], "1") => format!["{}", $package::problem_1(&data)],
+                    (stringify![$package], "2") => format!["{}", $package::problem_2(&data)],
                 )+
                 _ => {
                     panic!("Unknown day {day} and problem {problem}");
                 }
             };
-            let data = load_data(&day);
-            let answer = f(&data);
             println!["{answer}"];
         }
         #[cfg(test)]
@@ -91,7 +90,7 @@ days!(
     (day15, 1495147, 1524905),
     (day16, 134588, 631),
     (day17, 2_1_0_4_6_2_4_2_0, 109685330781408),
-    (day18, 234, None),
+    (day18, 234, "58,19".to_string()),
     (day19, None, None),
     (day20, None, None),
     (day21, None, None),
@@ -107,7 +106,11 @@ fn load_data(file_name: &str) -> String {
 }
 
 #[cfg(test)]
-fn run_test(want: Option<i64>, problem_func: fn(&str) -> i64, package_name: &str) {
+fn run_test<T: Eq + std::fmt::Debug>(
+    want: Option<T>,
+    problem_func: fn(&str) -> T,
+    package_name: &str,
+) {
     let want = match want {
         None => return,
         Some(want) => want,

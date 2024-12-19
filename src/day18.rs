@@ -4,29 +4,47 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 pub fn problem_1(data: &str) -> i64 {
-    // 70x70 - steps=1024
-    // 6x6 - 12 -
-    solve(data, 71, 1024).unwrap()
+    let input = parse_input(data);
+    solve(&input, 71, 1024).unwrap()
 }
 
-pub fn problem_2(_data: &str) -> i64 {
-    0
+pub fn problem_2(data: &str) -> String {
+    solve_problem_2(data, 71)
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct Point(usize, usize);
+fn solve_problem_2(data: &str, width: usize) -> String {
+    let input = parse_input(data);
+    let mut lower = 0;
+    let mut upper = input.len();
+    while upper - lower > 1 {
+        let t = lower + (upper - lower) / 2;
+        println!("current bounds: [{lower},{upper}). trying {t}");
+        if solve(&input, width, t).is_none() {
+            upper = t;
+        } else {
+            lower = t;
+        }
+    }
+    let blocker = input[lower];
+    format!("{},{}", blocker.1, blocker.0)
+}
 
-pub fn solve(data: &str, width: usize, steps: usize) -> Option<i64> {
-    let corrupted: HashSet<Point> = data
-        .lines()
-        .take(steps)
+fn parse_input(data: &str) -> Vec<Point> {
+    data.lines()
         .map(|line| {
             let mut cells = line.split(',').map(|cell| cell.parse::<usize>().unwrap());
             let c = cells.next().unwrap();
             let r = cells.next().unwrap();
             Point(r, c)
         })
-        .collect();
+        .collect()
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct Point(usize, usize);
+
+fn solve(corrupted: &[Point], width: usize, steps: usize) -> Option<i64> {
+    let corrupted: HashSet<Point> = corrupted.iter().copied().take(steps).collect();
 
     let mut edges: HashMap<Point, Vec<(Point, i64)>> = Default::default();
     for r in 0..width {
@@ -84,11 +102,16 @@ mod test {
 2,0";
 
     fn problem_1_example(data: &str) -> i64 {
-        solve(data, 7, 12).unwrap()
+        let input = parse_input(data);
+        solve(&input, 7, 12).unwrap()
+    }
+
+    fn problem_2_example(data: &str) -> String {
+        solve_problem_2(data, 7)
     }
 
     super::super::tests::tests!(
         (test_problem_1_data_1, problem_1_example, DATA, 22),
-        (test_problem_2_data_1, problem_2, DATA, 0),
+        (test_problem_2_data_1, problem_2_example, DATA, "6,1"),
     );
 }
