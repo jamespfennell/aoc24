@@ -1,29 +1,34 @@
 pub fn problem_1(data: &str) -> i64 {
-    // for each character, see if we can make it to this character
     let input = Input::parse(data);
-    let mut sum = 0_i64;
-    for &pattern in &input.patterns {
-        let mut reachable = vec![false; pattern.len()];
+    calculate_reachability(&input)
+        .filter(|s| *s > 0)
+        .count()
+        .try_into()
+        .unwrap()
+}
+
+pub fn problem_2(data: &str) -> i64 {
+    let input = Input::parse(data);
+    calculate_reachability(&input).sum()
+}
+
+fn calculate_reachability<'a>(input: &'a Input<'a>) -> impl Iterator<Item = i64> + 'a {
+    input.patterns.iter().map(|pattern| {
+        let mut reachable = vec![0_i64; pattern.len()];
         for i in 0..pattern.len() {
-            if i > 0 && !reachable[i - 1] {
+            let num_ways_in = if i > 0 { reachable[i - 1] } else { 1 };
+            if num_ways_in == 0 {
                 continue;
             }
             let pattern = &pattern[i..];
             for &towel in &input.towels {
                 if pattern.starts_with(towel) {
-                    reachable[i + towel.len() - 1] = true;
+                    reachable[i + towel.len() - 1] += num_ways_in;
                 }
             }
         }
-        if reachable[pattern.len() - 1] {
-            sum += 1;
-        }
-    }
-    sum
-}
-
-pub fn problem_2(_data: &str) -> i64 {
-    0
+        reachable[pattern.len() - 1]
+    })
 }
 
 #[derive(Debug)]
@@ -62,6 +67,6 @@ bbrgwb";
 
     super::super::tests::tests!(
         (test_problem_1_data_1, problem_1, DATA, 6),
-        (test_problem_2_data_1, problem_2, DATA, 0),
+        (test_problem_2_data_1, problem_2, DATA, 16),
     );
 }
