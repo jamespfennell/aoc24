@@ -1,3 +1,4 @@
+use super::algorithms::calculate_shortest_paths;
 use super::common::Direction;
 use std::{
     collections::{HashMap, HashSet},
@@ -14,7 +15,7 @@ pub fn problem_1(data: &str) -> i64 {
         direction: Direction::Right,
     };
     assert_eq!(grid[start.r][start.c], 'S');
-    let lowest_prices = calculate_lowest_prices(edges, start);
+    let lowest_prices = calculate_shortest_paths(edges, start);
     Direction::all_directions()
         .map(|direction| {
             let end = Vertex {
@@ -26,7 +27,7 @@ pub fn problem_1(data: &str) -> i64 {
             lowest_prices.get(&end).unwrap().clone()
         })
         .into_iter()
-        .map(|l| l.price)
+        .map(|l| l.cost)
         .min()
         .unwrap()
 }
@@ -40,7 +41,7 @@ pub fn problem_2(data: &str) -> i64 {
         direction: Direction::Right,
     };
     assert_eq!(grid[start.r][start.c], 'S');
-    let lowest_prices = calculate_lowest_prices(edges, start);
+    let lowest_prices = calculate_shortest_paths(edges, start);
     let ends = Direction::all_directions().map(|direction| {
         let end = Vertex {
             r: 1,
@@ -50,12 +51,12 @@ pub fn problem_2(data: &str) -> i64 {
         assert_eq!(grid[end.r][end.c], 'E');
         (end.clone(), lowest_prices.get(&end).unwrap().clone())
     });
-    let min_price = ends.iter().map(|l| l.1.price).min().unwrap();
+    let min_price = ends.iter().map(|l| l.1.cost).min().unwrap();
 
     let mut good_v: HashSet<Vertex> = Default::default();
     let mut pending: Vec<Vertex> = Default::default();
     for (v, end) in ends {
-        if end.price != min_price {
+        if end.cost != min_price {
             continue;
         }
         good_v.insert(v);
@@ -123,73 +124,6 @@ fn build_edges(grid: &[Vec<char>]) -> HashMap<Vertex, Vec<(Vertex, i64)>> {
         }
     }
     edges
-}
-
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
-struct LowestPrice<V> {
-    price: i64,
-    sources: Vec<V>,
-}
-
-fn calculate_lowest_prices<V: Eq + Hash + Clone>(
-    edges: HashMap<V, Vec<(V, i64)>>,
-    start: V,
-) -> HashMap<V, LowestPrice<V>> {
-    let mut prices: HashMap<V, LowestPrice<V>> = Default::default();
-    let mut pending: HashMap<V, LowestPrice<V>> = Default::default();
-    pending.insert(
-        start,
-        LowestPrice {
-            price: 0,
-            sources: vec![],
-        },
-    );
-    while let Some((v, price)) = find_smallest(&pending) {
-        let lowest_price = pending.remove(&v).unwrap();
-        if let Some(edges) = edges.get(&v) {
-            for (dest, cost) in edges {
-                // We've already found the cheapest price for this dest vertex
-                if prices.contains_key(dest) {
-                    continue;
-                }
-                let candidate = price + cost;
-                let current = pending.entry(dest.clone()).or_insert(LowestPrice {
-                    price: i64::MAX,
-                    sources: vec![],
-                });
-                use std::cmp::Ordering;
-                match candidate.cmp(&current.price) {
-                    Ordering::Less => {
-                        *current = LowestPrice {
-                            price: candidate,
-                            sources: vec![v.clone()],
-                        }
-                    }
-                    Ordering::Equal => {
-                        current.sources.push(v.clone());
-                    }
-                    Ordering::Greater => {}
-                }
-            }
-        }
-        prices.insert(v, lowest_price);
-    }
-    prices
-}
-
-// TODO: we could use a heap to avoid paying O(n) to find the smallest value.
-fn find_smallest<V: Clone>(pending: &HashMap<V, LowestPrice<V>>) -> Option<(V, i64)> {
-    let mut v_or = None;
-    for (k, v) in pending {
-        let smaller = match v_or {
-            None => true,
-            Some((_, v_other)) => v.price < v_other,
-        };
-        if smaller {
-            v_or = Some((k, v.price));
-        }
-    }
-    v_or.map(|(v, c)| (v.clone(), c))
 }
 
 #[cfg(test)]

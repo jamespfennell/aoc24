@@ -16,6 +16,24 @@ impl Direction {
             Right => (r, c + 1),
         }
     }
+    pub fn next_checked(
+        &self,
+        (r, c): (usize, usize),
+        (r_upper, c_upper): (usize, usize),
+    ) -> Option<(usize, usize)> {
+        use Direction::*;
+        let in_bounds = match self {
+            Up => r > 0,
+            Down => r < r_upper - 1,
+            Left => c > 0,
+            Right => c < c_upper - 1,
+        };
+        if in_bounds {
+            Some(self.next((r, c)))
+        } else {
+            None
+        }
+    }
     #[allow(unused)]
     pub fn opposite(&self) -> Self {
         use Direction::*;

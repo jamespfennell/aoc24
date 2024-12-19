@@ -1,3 +1,4 @@
+mod algorithms;
 mod common;
 mod day1;
 mod day10;
@@ -90,7 +91,7 @@ days!(
     (day15, 1495147, 1524905),
     (day16, 134588, 631),
     (day17, 2_1_0_4_6_2_4_2_0, 109685330781408),
-    (day18, None, None),
+    (day18, 234, None),
     (day19, None, None),
     (day20, None, None),
     (day21, None, None),
