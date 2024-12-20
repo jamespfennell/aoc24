@@ -92,7 +92,7 @@ days!(
     (day17, 2_1_0_4_6_2_4_2_0, 109685330781408),
     (day18, 234, "58,19".to_string()),
     (day19, 342, 891192814474630),
-    (day20, None, None),
+    (day20, 1404, None),
     (day21, None, None),
     (day22, None, None),
     (day23, None, None),

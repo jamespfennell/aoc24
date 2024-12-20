@@ -1,3 +1,6 @@
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Point(pub usize, pub usize);
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum Direction {
     Up,

@@ -1,5 +1,6 @@
 use super::algorithms;
 use super::common::Direction;
+use super::common::Point;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -39,9 +40,6 @@ fn parse_input(data: &str) -> Vec<Point> {
         })
         .collect()
 }
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct Point(usize, usize);
 
 fn solve(corrupted: &[Point], width: usize, steps: usize) -> Option<i64> {
     let corrupted: HashSet<Point> = corrupted.iter().copied().take(steps).collect();
