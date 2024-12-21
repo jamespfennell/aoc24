@@ -13,24 +13,37 @@ const KEYPAD_N: [[char; 3]; 4] = [
     [' ', '0', 'A'],
 ];
 
-pub fn problem_1(data: &str) -> i64 {
+pub fn problem_1(data: &str) -> usize {
+    solve(data, 2)
+}
+
+pub fn problem_2(data: &str) -> usize {
+    solve(data, 25)
+}
+
+pub fn solve(data: &str, keypad_ds_levels: usize) -> usize {
     let keypad_d_paths = build_paths(KEYPAD_D);
     let keypad_n_paths = build_paths(KEYPAD_N);
-
-    let i: usize = data
-        .lines()
+    data.lines()
         .map(|line| {
-            let l = shortest_path_for_code_1(line, &keypad_n_paths, &keypad_d_paths);
+            let l =
+                shortest_path_for_n_code(line, &keypad_n_paths, &keypad_d_paths, keypad_ds_levels);
             let n: usize = line[0..line.len() - 1].parse().unwrap();
             l * n
         })
-        .sum();
-    i.try_into().unwrap()
+        .sum()
 }
 
 type Paths = HashMap<(char, char), Vec<Vec<Direction>>>;
+type Cache = HashMap<(char, char, usize), usize>;
 
-fn shortest_path_for_code_1(code: &str, keypad_n_paths: &Paths, keypad_d_paths: &Paths) -> usize {
+fn shortest_path_for_n_code(
+    code: &str,
+    keypad_n_paths: &Paths,
+    keypad_d_paths: &Paths,
+    keypad_ds_levels: usize,
+) -> usize {
+    let mut cache: Cache = Default::default();
     // Starting from A, we need to type chars on the first key pad.
     // The final A is already contained in chars.
     let chars: Vec<char> = code.chars().collect();
@@ -42,7 +55,8 @@ fn shortest_path_for_code_1(code: &str, keypad_n_paths: &Paths, keypad_d_paths: 
         sum += codes
             .into_iter()
             .map(|code| {
-                let l = shortest_path_for_code_2(code, keypad_d_paths);
+                let l =
+                    shortest_path_for_d_code(code, keypad_d_paths, &mut cache, keypad_ds_levels);
                 l
             })
             .min()
@@ -52,41 +66,42 @@ fn shortest_path_for_code_1(code: &str, keypad_n_paths: &Paths, keypad_d_paths: 
     sum
 }
 
-fn shortest_path_for_code_2(code: &[Direction], keypad_d_paths: &Paths) -> usize {
+fn shortest_path_for_d_code(
+    code: &[Direction],
+    keypad_d_paths: &Paths,
+    cache: &mut Cache,
+    keypad_ds_level: usize,
+) -> usize {
     // Starting from A, we need to type code and then 'A' on the second key pad
     let mut current = 'A';
     let mut sum = 0;
     for i in 0..=code.len() {
         let next = code.get(i).map(Direction::char).unwrap_or('A');
-        let codes = keypad_d_paths.get(&(current, next)).unwrap();
-        sum += codes
-            .into_iter()
-            .map(|code| {
-                let l = shortest_path_for_code_3(code, keypad_d_paths);
-                l
-            })
-            .min()
-            .unwrap();
-        current = next;
-    }
-    sum
-}
-
-fn shortest_path_for_code_3(code: &[Direction], keypad_d_paths: &Paths) -> usize {
-    // Starting from A, we need to type code and then 'A' on the second key pad
-    let mut current = 'A';
-    let mut sum = 0;
-    for i in 0..=code.len() {
-        let next = code.get(i).map(Direction::char).unwrap_or('A');
-        let codes = keypad_d_paths.get(&(current, next)).unwrap();
-        sum += codes
-            .into_iter()
-            .map(|code| {
-                let l = code.len() + 1;
-                l
-            })
-            .min()
-            .unwrap();
+        sum += match cache.get(&(current, next, keypad_ds_level)) {
+            Some(n) => *n,
+            None => {
+                let codes = keypad_d_paths.get(&(current, next)).unwrap();
+                let n = codes
+                    .into_iter()
+                    .map(|code| {
+                        let l = if keypad_ds_level == 1 {
+                            code.len() + 1
+                        } else {
+                            shortest_path_for_d_code(
+                                code,
+                                keypad_d_paths,
+                                cache,
+                                keypad_ds_level - 1,
+                            )
+                        };
+                        l
+                    })
+                    .min()
+                    .unwrap();
+                cache.insert((current, next, keypad_ds_level), n);
+                n
+            }
+        };
         current = next;
     }
     sum
@@ -151,10 +166,6 @@ fn build_paths<const R: usize, const C: usize>(
         .collect()
 }
 
-pub fn problem_2(_data: &str) -> i64 {
-    0
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -164,8 +175,5 @@ mod test {
 456A
 379A";
 
-    super::super::tests::tests!(
-        (test_problem_1_data_1, problem_1, DATA, 126384),
-        (test_problem_2_data_1, problem_2, DATA, 0),
-    );
+    super::super::tests::tests!((test_problem_1_data_1, problem_1, DATA, 126384),);
 }
