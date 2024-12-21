@@ -16,6 +16,14 @@ pub enum Direction {
 }
 
 impl Direction {
+    pub fn char(&self) -> char {
+        match self {
+            Direction::Up => '^',
+            Direction::Down => 'v',
+            Direction::Left => '<',
+            Direction::Right => '>',
+        }
+    }
     pub fn next(&self, (r, c): (usize, usize)) -> (usize, usize) {
         use Direction::*;
         match self {
@@ -43,7 +51,6 @@ impl Direction {
             None
         }
     }
-    #[allow(unused)]
     pub fn opposite(&self) -> Self {
         use Direction::*;
         match self {
