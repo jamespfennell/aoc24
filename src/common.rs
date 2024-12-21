@@ -1,6 +1,12 @@
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Point(pub usize, pub usize);
 
+impl Point {
+    pub fn distance(&self, other: Point) -> usize {
+        self.0.abs_diff(other.0) + self.1.abs_diff(other.1)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum Direction {
     Up,
