@@ -94,7 +94,7 @@ days!(
     (day19, 342, 891192814474630),
     (day20, 1404, 1010981),
     (day21, 219254, 264518225304496),
-    (day22, None, None),
+    (day22, 14476723788, None),
     (day23, None, None),
     (day24, None, None),
     (day25, None, None),
