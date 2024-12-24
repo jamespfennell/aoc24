@@ -102,7 +102,7 @@ days!(
         893,
         "cw,dy,ef,iw,ji,jv,ka,ob,qv,ry,ua,wt,xz".to_string()
     ),
-    (day24, None, None),
+    (day24, 42883464055378, None),
     (day25, None, None),
 );
 
