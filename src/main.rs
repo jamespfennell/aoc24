@@ -43,6 +43,7 @@ macro_rules! days {
         fn print_problem_answer(day: &str, problem: &str) {
             let day = format!["day{day}"];
             let data = load_data(&day);
+            let now = std::time::Instant::now();
             let answer = match (day.as_str(), problem) {
                 $(
                     (stringify![$package], "1") => format!["{}", $package::problem_1(&data)],
@@ -52,7 +53,8 @@ macro_rules! days {
                     panic!("Unknown day {day} and problem {problem}");
                 }
             };
-            println!["{answer}"];
+            let elapsed = now.elapsed();
+            println!("{answer} (took {:.2?})", elapsed);
         }
         #[cfg(test)]
         mod test {

@@ -24,17 +24,18 @@ pub fn problem_1(data: &str) -> i64 {
 }
 
 pub fn problem_2(data: &str) -> String {
-    // less than 3380 edges (or 6760 bidirectional)
-    // for a party of size n, there are (n choose 2) = n (n-1)/2 edges (or n(n-1) bidirectional )
-    // biggest party has 82 nodes
-
-    let links = build_links(data);
+    let mut links = build_links(data);
     let mut max = 0;
     let mut max_nodes = vec![];
-    for (&node, connected) in &links {
-        let mut candidates: Vec<&str> = connected.into_iter().copied().collect();
-        candidates.push(node);
-        candidates.sort();
+    while let Some(&node) = links.keys().next() {
+        let candidates = links.remove(node).unwrap();
+        for &other in &candidates {
+            links.get_mut(other).unwrap().remove(node);
+        }
+        if candidates.len() <= max {
+            continue;
+        }
+        let candidates: Vec<&str> = candidates.into_iter().collect();
         let edges: Vec<Vec<bool>> = candidates
             .iter()
             .map(|node| {
@@ -46,6 +47,14 @@ pub fn problem_2(data: &str) -> String {
             })
             .collect();
         for subset in Subsets::new(candidates.len()) {
+            if subset[..candidates.len()]
+                .into_iter()
+                .filter(|&&x| x)
+                .count()
+                <= max
+            {
+                continue;
+            }
             let mut num_edges = 0;
             let mut num_nodes = 0;
             for (i, included) in subset[..candidates.len()].iter().enumerate() {
@@ -71,6 +80,7 @@ pub fn problem_2(data: &str) -> String {
                         .map(|(_, node)| node)
                         .copied()
                         .collect();
+                    max_nodes.push(node);
                     max = num_nodes;
                 }
             }
