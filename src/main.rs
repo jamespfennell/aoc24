@@ -95,7 +95,11 @@ days!(
     (day20, 1404, 1010981),
     (day21, 219254, 264518225304496),
     (day22, 14476723788, 1630),
-    (day23, 893, None),
+    (
+        day23,
+        893,
+        "cw,dy,ef,iw,ji,jv,ka,ob,qv,ry,ua,wt,xz".to_string()
+    ),
     (day24, None, None),
     (day25, None, None),
 );
