@@ -1,4 +1,7 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Display,
+};
 
 pub fn problem_1(data: &str) -> i64 {
     let Input { mut done, pending } = Input::parse(data);
@@ -31,11 +34,143 @@ pub fn problem_1(data: &str) -> i64 {
     sum
 }
 
-pub fn problem_2(_data: &str) -> i64 {
-    0
+fn swap<'a>(
+    rules: &mut HashMap<&'a str, (&str, &str, Op)>,
+    swaps: &mut Vec<String>,
+    a: &'a str,
+    b: &'a str,
+) {
+    println!("SWAPPING {a} <-> {b}");
+    let swap_1 = *rules.get(a).unwrap();
+    let swap_2 = *rules.get(b).unwrap();
+    rules.insert(a, swap_2);
+    rules.insert(b, swap_1);
+    swaps.push(a.to_string());
+    swaps.push(b.to_string());
 }
 
-#[derive(Clone, Copy, Debug)]
+pub fn problem_2(data: &str) -> String {
+    let Input {
+        done: _,
+        pending: mut rules,
+    } = Input::parse(data);
+    // TODO find c00 ourselves?
+    let mut mappings: HashMap<Decoded, &str> = Default::default();
+    mappings.insert(Decoded('c', 0), "mcg");
+    let mut swaps: Vec<String> = vec![];
+
+    for k in 1..45 {
+        let last_c = Decoded('c', k - 1);
+        let last_c_code = *mappings.get(&last_c).unwrap();
+
+        let c = Decoded('c', k);
+        let f = Decoded('f', k);
+        let g = Decoded('g', k);
+        let h = Decoded('h', k);
+        let x = Decoded('x', k);
+        let y = Decoded('y', k);
+        let z = Decoded('z', k);
+        let x_code = x.to_string();
+        let y_code = y.to_string();
+        let z_code = z.to_string();
+        // this makes z_code lifetime pinned to the rules
+        let z_code = *rules
+            .keys()
+            .filter(|&&k| k == z_code.as_str())
+            .next()
+            .unwrap();
+        // Find the C_prev XOR F rule to find F, and then ensure the rule is mapped correctly.
+        for (&out, &(l, r, op)) in rules.iter() {
+            let other = match (l == last_c_code, r == last_c_code) {
+                (true, true) => panic!("impossible rule"),
+                (true, false) => r,
+                (false, true) => l,
+                (false, false) => continue,
+            };
+            if op == Op::Xor {
+                mappings.insert(f, other);
+                if out != z_code {
+                    swap(&mut rules, &mut swaps, out, z_code);
+                }
+                break;
+            }
+        }
+        let f_code = *mappings
+            .get(&f)
+            .expect(&format!("failed to determine {f:?}"));
+
+        // Ensure the X XOR Y rule is mapped correctly.
+        for (&out, &(l, r, op)) in rules.iter() {
+            if op == Op::Xor && ((l == x_code && r == y_code) || (l == y_code && r == x_code)) {
+                if out != f_code {
+                    swap(&mut rules, &mut swaps, out, f_code);
+                }
+                break;
+            }
+        }
+
+        // find g and h
+        let mut g_or = None;
+        let mut h_or = None;
+        for (&out, &(l, r, op)) in rules.iter() {
+            if op == Op::And
+                && ((l == last_c_code && r == f_code) || (l == f_code && r == last_c_code))
+            {
+                g_or = Some(out);
+            }
+            if op == Op::And && ((l == x_code && r == y_code) || (l == y_code && r == x_code)) {
+                h_or = Some(out);
+            }
+        }
+        // We must have found g and h, but note that they are only candidates!
+        // We may have to swap them.
+        // UPDATE: it turns out we don't.
+        let g_code = g_or.unwrap();
+        let h_code = h_or.unwrap();
+
+        for (&out, &(l, r, op)) in rules.iter() {
+            if op != Op::Or {
+                continue;
+            }
+            let has_g = l == g_code || r == g_code;
+            let has_h = l == h_code || r == h_code;
+            match (has_h, has_g) {
+                (true, true) => {
+                    mappings.insert(g, g_code);
+                    mappings.insert(h, h_code);
+                    mappings.insert(c, out);
+                }
+                (true, false) | (false, true) => {
+                    panic!("can't handle this case!");
+                }
+                // not relevant
+                (false, false) => {}
+            }
+        }
+        if !mappings.contains_key(&c) {
+            panic!("failed to find {c:?}")
+        }
+    }
+    swaps.sort();
+    swaps.join(",")
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct Decoded(char, u8);
+
+impl Decoded {
+    fn to_string(&self) -> String {
+        format!("{}{:02}", self.0, self.1)
+    }
+}
+
+impl Display for Decoded {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}{:02}", self.0, self.1)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum Op {
     And,
     Or,
@@ -188,7 +323,5 @@ tnw OR pbm -> gnj";
     super::super::tests::tests!(
         (test_problem_1_data_1, problem_1, DATA_1, 4),
         (test_problem_1_data_2, problem_1, DATA_2, 2024),
-        (test_problem_2_data_1, problem_2, DATA_1, 0),
-        (test_problem_2_data_2, problem_2, DATA_2, 0),
     );
 }
