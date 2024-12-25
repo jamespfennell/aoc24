@@ -126,7 +126,7 @@ days!(
         42883464055378,
         "dqr,dtk,pfw,shh,vgs,z21,z33,z39".to_string()
     ),
-    (day25, None, None),
+    (day25, 2824, None),
 );
 
 fn load_data(file_name: &str) -> String {
