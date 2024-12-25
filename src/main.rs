@@ -32,16 +32,34 @@ mod tests;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if args.len() < 2 {
+        panic!("Must provide at least 1 command line arguments")
+    }
+    if args[1].as_str() == "all" {
+        print_all();
+        return;
+    }
     if args.len() < 3 {
         panic!("Must provide 2 command line arguments: the day number and problem number");
     }
     print_problem_answer(args[1].as_str(), args[2].as_str());
 }
 
+fn print_all() {
+    let mut total = std::time::Duration::new(0, 0);
+    for i in 1..=25 {
+        let d1 = print_problem_answer(&format!["{i}"], "1");
+        total += d1;
+        let d2 = print_problem_answer(&format!["{i}"], "2");
+        total += d2;
+    }
+    println!("Total duration: {total:?}");
+}
+
 macro_rules! days {
     ( $( ($package: ident, $answer1: expr, $answer2: expr), )+ ) => {
-        fn print_problem_answer(day: &str, problem: &str) {
-            let day = format!["day{day}"];
+        fn print_problem_answer(day_raw: &str, problem: &str)-> std::time::Duration {
+            let day = format!["day{day_raw}"];
             let data = load_data(&day);
             let now = std::time::Instant::now();
             let answer = match (day.as_str(), problem) {
@@ -54,7 +72,8 @@ macro_rules! days {
                 }
             };
             let elapsed = now.elapsed();
-            println!("{answer} (took {:.2?})", elapsed);
+            println!("Day {day_raw:2} problem {problem}: {answer} (took {:.2?})", elapsed);
+            elapsed
         }
         #[cfg(test)]
         mod test {
@@ -91,7 +110,7 @@ days!(
     (day14, 224969976, 7892),
     (day15, 1495147, 1524905),
     (day16, 134588, 631),
-    (day17, 2_1_0_4_6_2_4_2_0, 109685330781408),
+    (day17, "2,1,0,4,6,2,4,2,0".to_string(), 109685330781408),
     (day18, 234, "58,19".to_string()),
     (day19, 342, 891192814474630),
     (day20, 1404, 1010981),

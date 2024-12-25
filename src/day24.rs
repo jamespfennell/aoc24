@@ -40,7 +40,6 @@ fn swap<'a>(
     a: &'a str,
     b: &'a str,
 ) {
-    println!("SWAPPING {a} <-> {b}");
     let swap_1 = *rules.get(a).unwrap();
     let swap_2 = *rules.get(b).unwrap();
     rules.insert(a, swap_2);

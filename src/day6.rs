@@ -35,44 +35,47 @@ pub fn problem_2(data: &str) -> i64 {
         .next()
         .expect("expect to find the starting position");
     // All squares that can be blocked
-    let blockables: HashSet<(usize, usize)> = {
+    let path: Vec<Step> = {
         let position = Position {
             r: start.0,
             c: start.1,
             direction: Direction::Up,
             has_obstacle: &has_obstacle,
         };
-        position
-            .into_iter()
-            .map(|step| (step.r, step.c))
-            .filter(|step| *step != start)
-            .collect()
+        position.into_iter().collect()
     };
+    let mut blocked: HashSet<(usize, usize)> = Default::default();
     let mut count = 0;
-    for blockable in blockables {
-        has_obstacle[blockable.0][blockable.1] = true;
+    for i in 1..path.len() {
+        let start = path[i - 1];
+        let blockable = path[i];
+        if blocked.contains(&(blockable.r, blockable.c)) {
+            continue;
+        }
+        blocked.insert((blockable.r, blockable.c));
+        has_obstacle[blockable.r][blockable.c] = true;
         if has_infnite_loop(&has_obstacle, start) {
             count += 1;
         }
-        has_obstacle[blockable.0][blockable.1] = false;
+        has_obstacle[blockable.r][blockable.c] = false;
     }
     count
 }
 
-fn has_infnite_loop(has_obstacle: &[Vec<bool>], start: (usize, usize)) -> bool {
+fn has_infnite_loop(has_obstacle: &[Vec<bool>], start: Step) -> bool {
     // Key = visited squares
     // Value = number of times visited. If we visit 5 or more times we are guaranteed
     // to be on the same path.
-    let mut visited: HashMap<(usize, usize), u8> = Default::default();
+    let mut visited: HashMap<Step, u8> = Default::default();
     let position = Position {
-        r: start.0,
-        c: start.1,
-        direction: Direction::Up,
+        r: start.r,
+        c: start.c,
+        direction: start.direction,
         has_obstacle,
     };
     for step in position {
-        let visits = visited.entry((step.r, step.c)).or_default();
-        if *visits == 4 {
+        let visits = visited.entry(step).or_default();
+        if *visits == 1 {
             return true;
         }
         *visits = *visits + 1;
@@ -80,7 +83,7 @@ fn has_infnite_loop(has_obstacle: &[Vec<bool>], start: (usize, usize)) -> bool {
     false
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum Direction {
     Up,
     Down,
@@ -128,11 +131,14 @@ struct Position<'a> {
     has_obstacle: &'a [Vec<bool>],
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct Step {
     // Row coordinate of the box we're leaving
     r: usize,
     // Column coordinate of the box we're leaving
     c: usize,
+    // Direction we entered through
+    direction: Direction,
 }
 
 impl<'a> Iterator for Position<'a> {
@@ -156,6 +162,7 @@ impl<'a> Iterator for Position<'a> {
                     let step = Step {
                         r: self.r,
                         c: self.c,
+                        direction: self.direction,
                     };
                     self.r = usize::MAX;
                     self.c = usize::MAX;
@@ -167,6 +174,7 @@ impl<'a> Iterator for Position<'a> {
                 let step = Step {
                     r: self.r,
                     c: self.c,
+                    direction: self.direction,
                 };
                 self.r = next.0;
                 self.c = next.1;

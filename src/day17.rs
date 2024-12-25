@@ -1,4 +1,4 @@
-pub fn problem_1(data: &str) -> i64 {
+pub fn problem_1(data: &str) -> String {
     let mut machine = parse_input(data);
     let mut output: Vec<u8> = vec![];
     machine.run(|d| {
@@ -10,8 +10,7 @@ pub fn problem_1(data: &str) -> i64 {
         r = r * 10 + (*d as i64);
     }
     let output: Vec<String> = output.into_iter().map(|i| format!("{i}")).collect();
-    println!("{}", output.join(","));
-    r
+    output.join(",")
 }
 
 pub fn problem_2(data: &str) -> i64 {
@@ -241,7 +240,7 @@ Program: 0,3,5,4,3,0";
             test_problem_1_data_1,
             problem_1,
             DATA_1,
-            4_6_3_5_6_3_5_2_1_0
+            "4,6,3,5,6,3,5,2,1,0".to_string()
         ),
         (test_problem_2_data_2, problem_2, DATA_2, 117440),
     );

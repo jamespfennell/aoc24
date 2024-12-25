@@ -15,7 +15,7 @@ pub fn problem_2(data: &str) -> i64 {
     let max_y = 103;
     let mut positions: HashSet<(i64, i64)> = Default::default();
     let mut line = String::new();
-    for t in 0..2 {
+    for _ in 0..2 {
         positions.clear();
         for r in &robots {
             positions.insert((r.p.0, r.p.1));
@@ -25,7 +25,7 @@ pub fn problem_2(data: &str) -> i64 {
         // 579 - 476 - 373  # interesting horizontal structure every 64 + 103 * n
         // We want a T such that T = 14 + 101 * m = 64 + 103 * n for integers n and m
         // The smallest such n is 76, and t = 64 + 103 * 76 = 7892
-        println!("------------- {t}");
+        // println!("------------- {t}");
         for y in 0..max_y {
             line.clear();
             for x in 0..max_x {
@@ -36,7 +36,7 @@ pub fn problem_2(data: &str) -> i64 {
                 };
                 line.push(c);
             }
-            println!("{line}");
+            // println!("{line}");
         }
 
         for r in &mut robots {

@@ -19,7 +19,6 @@ fn solve_problem_2(data: &str, width: usize) -> String {
     let mut upper = input.len();
     while upper - lower > 1 {
         let t = lower + (upper - lower) / 2;
-        println!("current bounds: [{lower},{upper}). trying {t}");
         if solve(&input, width, t).is_none() {
             upper = t;
         } else {
